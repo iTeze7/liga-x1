@@ -17,7 +17,7 @@ const initialGames = [
   {
     id: 1,
     homePlayer: { name: 'WALLACY', photo: playerPhotos.wallacy },
-    awayPlayer: { name: 'XAVIER Abusado', photo: playerPhotos.xavier },
+    awayPlayer: { name: 'XAVIER', photo: playerPhotos.xavier },
     prize: '$200',
     homeVotes: 0,
     drawVotes: 0,
@@ -27,7 +27,7 @@ const initialGames = [
   {
     id: 2,
     homePlayer: { name: 'HIGOR', photo: playerPhotos.higor },
-    awayPlayer: { name: 'IGOR', photo: playerPhotos.igor },
+    awayPlayer: { name: 'IGER', photo: playerPhotos.igor },
     prize: '$100',
     homeVotes: 0,
     drawVotes: 0,
@@ -36,7 +36,7 @@ const initialGames = [
   },
   {
     id: 3,
-    homePlayer: { name: 'GUSTAVINHO', photo: playerPhotos.gustavinho },
+    homePlayer: { name: 'GUSTAVINHO DA JAK', photo: playerPhotos.gustavinho },
     awayPlayer: { name: 'LIPE', photo: playerPhotos.lipe },
     prize: '$20',
     homeVotes: 0,
