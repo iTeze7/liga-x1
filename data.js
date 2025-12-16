@@ -17,7 +17,7 @@ const initialGames = [
   {
     id: 1,
     homePlayer: { name: 'WALLACY', photo: playerPhotos.wallacy },
-    awayPlayer: { name: 'XAVIER', photo: playerPhotos.xavier },
+    awayPlayer: { name: 'XAVIER Abusado', photo: playerPhotos.xavier },
     prize: '$200',
     homeVotes: 0,
     drawVotes: 0,
