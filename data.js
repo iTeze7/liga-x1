@@ -1,15 +1,15 @@
 // Player photos
 const playerPhotos = {
-  gustavinho: 'images/gustavinho.png',
-  gustha: 'images/gustha.png',
-  higor: 'images/higor.png',
-  igor: 'images/igor.png',
-  leandro: 'images/leandro.png',
-  lipe: 'images/lipe.png',
-  robert: 'images/robert.png',
-  wallacy: 'images/wallacy.png',
-  xavier: 'images/xavier.png',
-  zago: 'images/zago.png'
+  gustavinho: './images/gustavinho.png',
+  gustha: './images/gustha.png',
+  higor: './images/higor.png',
+  igor: './images/igor.png',
+  leandro: './images/leandro.png',
+  lipe: './images/lipe.png',
+  robert: './images/robert.png',
+  wallacy: './images/wallacy.png',
+  xavier: './images/xavier.png',
+  zago: './images/zago.png'
 };
 
 // Initial games data
