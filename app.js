@@ -176,12 +176,21 @@ function renderPlayer(player, game, type) {
 }
 
 function renderDraw(game) {
+  const voted = votes.some(
+    v =>
+      v.username === username &&
+      v.game_id === game.id &&
+      v.vote_type === 'draw'
+  )
+    ? 'voted'
+    : '';
+
   return `
     <div class="player-section">
       <div class="prize">${game.prize}</div>
       <span class="player-name">EMPATE</span>
 
-      <button class="vote-btn"
+      <button class="vote-btn ${voted}"
         onclick="vote(${game.id}, 'draw')">
         ${getVotePercentage(game.id, 'draw')}%
       </button>
