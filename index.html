@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>X1 - 1ª Edição</title>
+  <meta name="description" content="Vote no jogador que você acha que vai vencer no Bolão 1ª Edição">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<!-- AUTH MODAL -->
+<div id="auth-modal" style="
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,.85);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+">
+  <div style="
+    background: #111;
+    padding: 2rem;
+    border-radius: 1rem;
+    width: 90%;
+    max-width: 320px;
+    text-align: center;
+  ">
+    <h2 style="margin-bottom:1rem;">Digite seu nome</h2>
+    <input id="username-input" placeholder="Seu nome"
+      style="width:100%;padding:.8rem;border-radius:.5rem;border:none;">
+    <button onclick="login()"
+      style="margin-top:1rem;width:100%;padding:.8rem;
+      background:#f2c94c;border:none;border-radius:.5rem;
+      font-weight:bold;cursor:pointer;">
+      ENTRAR
+    </button>
+  </div>
+</div>
+  
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="dollar-icon left">$</div>
+      <div class="dollar-icon right">$</div>
+      
+      <div class="header-content">
+        <h1 class="title">Liga X1</h1>
+        <div class="badges">
+          <div class="badge primary">1ª EDIÇÃO LIGA X1 Apostado</div>
+          <div class="badge secondary">19/12/2025</div>
+        </div>
+      </div>
+    </header>
+
+    <!-- Table Header -->
+    <div class="table-header">
+      <div class="table-header-item">CASA</div>
+      <div class="table-header-item">VALOR APOSTADO</div>
+      <div class="table-header-item">FORA</div>
+    </div>
+
+<div id="user-bar" style="
+  display: none;
+  padding: .8rem 1rem;
+  background: #111;
+  color: #fff;
+  justify-content: space-between;
+  align-items: center;
+">
+  <span id="username-label"></span>
+  <button onclick="logout()" style="
+    background:#e74c3c;
+    border:none;
+    padding:.4rem .8rem;
+    border-radius:.4rem;
+    cursor:pointer;
+    color:#fff;
+    font-weight:bold;
+  ">
+    SAIR
+  </button>
+</div>
+
+    <!-- Games List -->
+    <div id="games-list" class="games-list"></div>
+    
+    <!-- RANKING GERAL -->
+    <section class="ranking">
+  <h2 class="ranking-title">Ranking Geral</h2>
+  <div id="ranking-list" class="ranking-list"></div>
+</section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="footer-info">
+        <div class="footer-item">
+          <span class="icon">📍</span>
+          <span class="location">LOCAL: Galpão dos Artitas</span>
+        </div>
+        <div class="footer-item">
+          <span class="icon">🕐</span>
+          <span>18:00</span>
+        </div>
+      </div>
+      <p class="footer-text">Vote no jogador que você acha que vai vencer!</p>
+    </footer>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
