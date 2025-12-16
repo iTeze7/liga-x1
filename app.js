@@ -1,15 +1,19 @@
-// ================= STORAGE =================
-const STORAGE_KEY = 'bolao-votes';
-const USER_VOTES_KEY = 'bolao-user-votes';
-const AUTH_KEY = 'bolao-username';
+// ================= SUPABASE =================
+const SUPABASE_URL = 'https://esmctdmmkfzozjawclux.supabase.co';
+const SUPABASE_KEY =
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImVzbWN0ZG1ta2Z6b3pqYXdjbHV4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjU5MDE0OTUsImV4cCI6MjA4MTQ3NzQ5NX0.UhIwVIwVUWOtwWI_VfLmHYResqnKKK_8LGB0aE-5H3o';
+
+const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
 // ================= STATE =================
+const AUTH_KEY = 'bolao-username';
+
 let games = [];
-let userVotes = {};
 let username = null;
+let votes = []; // votos do banco
 
 // ================= INIT =================
-function init() {
+async function init() {
   username = localStorage.getItem(AUTH_KEY);
 
   if (!username) {
@@ -23,11 +27,14 @@ function init() {
   document.getElementById('user-bar').style.display = 'flex';
   document.getElementById('username-label').innerText = `Olá, ${username}`;
 
-  loadData();
+  games = JSON.parse(JSON.stringify(initialGames));
+
+  await loadVotes();
   updateAllOdds();
   renderGames();
 }
 
+// ================= LOGIN =================
 function login() {
   const input = document.getElementById('username-input');
   const name = input.value.trim();
@@ -40,47 +47,44 @@ function login() {
   input.value = '';
   init();
 }
+window.login = login;
 
 function logout() {
   if (!confirm('Deseja sair e entrar com outro nome?')) return;
 
   localStorage.removeItem(AUTH_KEY);
-  localStorage.removeItem(USER_VOTES_KEY);
-
   username = null;
-  userVotes = {};
 
   document.getElementById('auth-modal').style.display = 'flex';
   document.getElementById('user-bar').style.display = 'none';
   document.getElementById('games-list').innerHTML = '';
-
-  const input = document.getElementById('username-input');
-  if (input) input.value = '';
 }
 
-// ================= LOAD / SAVE =================
-function loadData() {
-  const savedGames = localStorage.getItem(STORAGE_KEY);
-  const savedUserVotes = localStorage.getItem(USER_VOTES_KEY);
+// ================= LOAD VOTES =================
+async function loadVotes() {
+  const { data, error } = await sb.from('votes').select('*');
 
-  if (savedGames) {
-    const parsed = JSON.parse(savedGames);
-    games = initialGames.map(game => {
-      const saved = parsed.find(g => g.id === game.id);
-      return saved ? { ...game, ...saved } : game;
-    });
-  } else {
-    games = [...initialGames];
+  if (error) {
+    console.error(error);
+    votes = [];
+    return;
   }
 
-  if (savedUserVotes) {
-    userVotes = JSON.parse(savedUserVotes);
-  }
-}
+  votes = data;
 
-function saveData() {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(games));
-  localStorage.setItem(USER_VOTES_KEY, JSON.stringify(userVotes));
+  // zera votos
+  games.forEach(g => {
+    g.homeVotes = 0;
+    g.drawVotes = 0;
+    g.awayVotes = 0;
+  });
+
+  // aplica votos
+  votes.forEach(v => {
+    const game = games.find(g => g.id === v.game_id);
+    if (!game) return;
+    game[`${v.vote_type}Votes`]++;
+  });
 }
 
 // ================= HELPERS =================
@@ -97,23 +101,14 @@ function getVotePercentage(gameId, type) {
 
 // ================= ODDS =================
 function calculateOdds(game) {
-  const minOdd = 1.10;
-  const maxOdd = 30.00;
+  const minOdd = 1.1;
+  const maxOdd = 30;
 
-  const totalVotes = game.homeVotes + game.drawVotes + game.awayVotes;
-
-  if (totalVotes === 0) {
-    const baseOdd = maxOdd - (0.33 * (maxOdd - minOdd));
-    game.odds.home = baseOdd.toFixed(2);
-    game.odds.draw = baseOdd.toFixed(2);
-    game.odds.away = baseOdd.toFixed(2);
-    return;
-  }
+  const total = game.homeVotes + game.drawVotes + game.awayVotes;
 
   function calc(votes) {
-    const percent = votes / totalVotes;
-    const odd = maxOdd - (percent * (maxOdd - minOdd));
-    return odd.toFixed(2);
+    if (!total) return (maxOdd - 0.33 * (maxOdd - minOdd)).toFixed(2);
+    return (maxOdd - (votes / total) * (maxOdd - minOdd)).toFixed(2);
   }
 
   game.odds.home = calc(game.homeVotes);
@@ -122,35 +117,44 @@ function calculateOdds(game) {
 }
 
 function updateAllOdds() {
-  games.forEach(game => calculateOdds(game));
+  games.forEach(calculateOdds);
 }
 
 // ================= VOTE (TOGGLE) =================
-function vote(gameId, type) {
+async function vote(gameId, type) {
   if (!username) return alert('Faça login primeiro');
 
-  const userKey = `${username}-${gameId}`;
-  const game = games.find(g => g.id === gameId);
+  const existing = votes.find(
+    v => v.username === username && v.game_id === gameId
+  );
 
-  if (userVotes[userKey] === type) {
-    game[`${type}Votes`]--;
-    delete userVotes[userKey];
-  } else if (userVotes[userKey]) {
+  if (existing && existing.vote_type === type) {
+    await sb.from('votes').delete().eq('id', existing.id);
+  } else if (existing) {
     return alert('Remova o voto atual para escolher outro.');
   } else {
-    game[`${type}Votes`]++;
-    userVotes[userKey] = type;
+    await sb.from('votes').insert({
+      username,
+      game_id: gameId,
+      vote_type: type
+    });
   }
 
+  await loadVotes();
   updateAllOdds();
-  saveData();
   renderGames();
 }
 
 // ================= RENDER =================
 function renderPlayer(player, game, type) {
-  const userKey = `${username}-${game.id}`;
-  const voted = userVotes[userKey] === type ? 'voted' : '';
+  const voted = votes.some(
+    v =>
+      v.username === username &&
+      v.game_id === game.id &&
+      v.vote_type === type
+  )
+    ? 'voted'
+    : '';
 
   const photo = player.photo
     ? `<img src="${player.photo}">`
@@ -172,15 +176,12 @@ function renderPlayer(player, game, type) {
 }
 
 function renderDraw(game) {
-  const userKey = `${username}-${game.id}`;
-  const voted = userVotes[userKey] === 'draw' ? 'voted' : '';
-
   return `
     <div class="player-section">
       <div class="prize">${game.prize}</div>
       <span class="player-name">EMPATE</span>
 
-      <button class="vote-btn ${voted}"
+      <button class="vote-btn"
         onclick="vote(${game.id}, 'draw')">
         ${getVotePercentage(game.id, 'draw')}%
       </button>
@@ -189,7 +190,8 @@ function renderDraw(game) {
     </div>
   `;
 }
-function renderGameCard(game, index) {
+
+function renderGameCard(game) {
   return `
     <div class="game-card">
       <div class="game-content">
@@ -200,69 +202,52 @@ function renderGameCard(game, index) {
     </div>
   `;
 }
+
+// ================= RANKING =================
 function getRanking() {
-  const rankingMap = {};
+  const map = {};
 
-  games.forEach(game => {
-    const home = game.homePlayer.name;
-    const away = game.awayPlayer.name;
-
-    rankingMap[home] = (rankingMap[home] || 0) + game.homeVotes;
-    rankingMap[away] = (rankingMap[away] || 0) + game.awayVotes;
+  games.forEach(g => {
+    map[g.homePlayer.name] =
+      (map[g.homePlayer.name] || 0) + g.homeVotes;
+    map[g.awayPlayer.name] =
+      (map[g.awayPlayer.name] || 0) + g.awayVotes;
   });
 
-  return Object.entries(rankingMap)
+  return Object.entries(map)
     .map(([name, votes]) => ({ name, votes }))
     .sort((a, b) => b.votes - a.votes);
 }
+
 function renderRanking() {
   const ranking = getRanking();
   const container = document.getElementById('ranking-list');
-
   if (!container) return;
 
-  if (ranking.length === 0) {
+  if (!ranking.length) {
     container.innerHTML =
       '<p style="text-align:center;color:#888;">Sem votos ainda</p>';
     return;
   }
 
-  container.innerHTML = ranking.map((item, index) => {
-    let positionHTML = `${index + 1}º`;
-    let medalClass = '';
-
-    if (index === 0) {
-      positionHTML = '🥇';
-      medalClass = 'medal gold';
-    } else if (index === 1) {
-      positionHTML = '🥈';
-      medalClass = 'medal silver';
-    } else if (index === 2) {
-      positionHTML = '🥉';
-      medalClass = 'medal bronze';
-    }
-
-    return `
+  container.innerHTML = ranking
+    .map(
+      (item, i) => `
       <div class="ranking-item">
-        <div class="ranking-left">
-          <span class="ranking-position ${medalClass}">
-            ${positionHTML}
-          </span>
-          <span class="ranking-name">${item.name}</span>
-        </div>
-        <span class="ranking-votes">${item.votes} votos</span>
+        <span>${i + 1}º</span>
+        <span>${item.name}</span>
+        <span>${item.votes} votos</span>
       </div>
-    `;
-  }).join('');
+    `
+    )
+    .join('');
 }
 
 function renderGames() {
   document.getElementById('games-list').innerHTML =
     games.map(renderGameCard).join('');
-
   renderRanking();
 }
-
 
 // ================= START =================
 document.addEventListener('DOMContentLoaded', init);
