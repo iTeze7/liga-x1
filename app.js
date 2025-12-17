@@ -101,8 +101,8 @@ function getVotePercentage(gameId, type) {
 
 // ================= ODDS =================
 function calculateOdds(game) {
-  const minOdd = 1.1;
-  const maxOdd = 30;
+  const minOdd = 0.1;
+  const maxOdd = 3.5;
 
   const total = game.homeVotes + game.drawVotes + game.awayVotes;
 
